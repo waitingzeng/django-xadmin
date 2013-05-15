@@ -35,4 +35,14 @@
     padding-right: 0px;
     padding-left: 0px;
   }
+  .form-actions.fixed{
+    position: static;
+  }
+
+  #top-nav .brand {
+    padding-left: 100px;
+  }
+  .breadcrumb {
+    display: none;
+  }
 }
