@@ -192,7 +192,11 @@
     }
     , post: function(e, data){
       this.$form.data('ajaxform').clean()
-      var wrap = this.$for_wrap
+      var wrap = this.$for_wrap;
+      if(this.refresh_url == '#'){
+        window.location.href = window.location.href;
+        return;
+      }
       $.get(this.refresh_url + data['obj_id'], function(form_html, status, xhr){
         wrap.html($('<body>' + form_html + '</body>').find('#' + wrap.attr('id')).html())
         wrap.exform()
