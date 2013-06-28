@@ -24,10 +24,13 @@ class BatchChangeAction(BaseActionView):
     batch_fields = []
 
     def change_models(self, queryset):
+
         n = queryset.count()
         if n:
-            queryset.delete()
-            self.message_user(_("Successfully deleted %(count)d %(items)s.") % {
+            obj = self.form_obj.save(commit=False)
+            data = {k: getattr(obj, k) for k in self.batch_fields}
+            queryset.update(**data)
+            self.message_user(_("Successfully update %(count)d %(items)s.") % {
                 "count": n, "items": model_ngettext(self.opts, n)
             }, 'success')
 
@@ -51,8 +54,9 @@ class BatchChangeAction(BaseActionView):
         if self.request.POST.get('post'):
             self.form_obj = form_class(
                 data=self.request.POST, files=self.request.FILES)
-
-            return None
+            if self.form_obj.is_valid():
+                self.change_models(queryset)
+                return None
         else:
             self.form_obj = form_class()
 

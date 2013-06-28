@@ -34,7 +34,7 @@
         </ul>
           {% view_block 'nav_form' %}
         <div class="btn-group pull-right">
-          {% view_block 'object-tools' %}
+          {% view_block 'object_tools' %}
           {% if has_add_permission %}
               <a href="{{add_url}}" class="btn btn-primary"><i class="icon-plus icon-white"></i> {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a>
           {% endif %}
@@ -46,10 +46,10 @@
       {% view_block 'top_toolbar' %}
       <div class="btn-group">
         <a class="dropdown-toggle btn btn-small" data-toggle="dropdown" href="#">
-          <i class="icon-list-alt"></i> {% trans "Display Columns" %} <b class="caret"></b>
+          <i class="icon-list-alt"></i> {% trans "Select Columes" %} <b class="caret"></b>
         </a>
         <ul class="dropdown-menu model_fields" role="menu" aria-labelledby="dLabel">
-          <li><a href="{{clean_select_field_url}}"><i class="icon-refresh"></i> {% trans "Restore Default" %}</a></li>
+          <li><a href="{{clean_select_field_url}}"><i class="icon-refresh"></i> {% trans "Restore Selected" %}</a></li>
           <li class="divider"></li>
           {% for f, selected, flink in model_fields %}
           <li><a href="{{flink}}">

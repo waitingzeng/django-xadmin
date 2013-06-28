@@ -44,8 +44,6 @@ class AdminSite(object):
 
         self.check_dependencies()
 
-        self.model_admins_order = 0
-
     def copy_registry(self):
         import copy
         return {
@@ -107,11 +105,11 @@ class AdminSite(object):
 
                 admin_class = type(str("%s%sAdmin" % (model._meta.app_label, model._meta.module_name)), (admin_class,), options or {})
                 admin_class.model = model
-                admin_class.order = self.model_admins_order
-                self.model_admins_order += 1
+
                 self._registry[model] = admin_class
             else:
                 if model in self._registry_avs:
+                    continue
                     raise AlreadyRegistered('The admin_view_class %s is already registered' % model.__name__)
                 if options:
                     options['__module__'] = __name__
