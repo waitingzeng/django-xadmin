@@ -189,8 +189,7 @@
     }
     , post: function(e, data){
       this.$form.data('ajaxform').clean()
-      var wrap = this.$for_wrap
-      console.log(this.refresh_url);
+      var wrap = this.$for_wrap;
       if(this.refresh_url == '#'){
         window.location.href = window.location.href;
         return;
