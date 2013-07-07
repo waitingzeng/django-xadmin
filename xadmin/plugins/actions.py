@@ -24,8 +24,6 @@ def action_checkbox(obj):
 action_checkbox.short_description = mark_safe(
     '<input type="checkbox" id="action-toggle" />')
 action_checkbox.allow_tags = True
-action_checkbox.allow_export = False
-action_checkbox.is_column = False
 
 
 class BaseActionView(ModelAdminView):
@@ -246,7 +244,7 @@ class ActionPlugin(BaseAdminPlugin):
     # Media
     def get_media(self, media):
         if self.actions and self.admin_view.result_count:
-            media = media + self.vendor('xadmin.plugin.actions.js', 'xadmin.plugins.css')
+            media = media + self.vendor('xadmin.plugin.actions.js')
         return media
 
     # Block Views

@@ -4,7 +4,7 @@
   $('form.widget-form').on('post-success', function(e, data){
     $(this).data('ajaxform').clean()
     $('.alert-success #change-link').attr('href', data['change_url'])
-    $('.alert-success').show()
+    $('.alert-success').show();
   })
 
   var AjaxForm = function(element, options) {
@@ -53,14 +53,12 @@
     , submit: function(e) {
         e.stopPropagation();
         e.preventDefault();
-
         $.when(this.save())
         .done($.proxy(function(data) {
           this.$mask.hide();
 
           this.$form.find('submit, button[type=submit], input[type=submit]').removeClass('disabled');
-          this.$form.find('.alert-success').hide()
-
+          this.$form.find('.alert-success').hide();
           if(data['result'] != 'success' && data['errors']){
             var non_fields_errors = []
             for (var i = data['errors'].length - 1; i >= 0; i--) {
@@ -107,7 +105,6 @@
       //     off_check_box[$(this).attr('name')] = '';
       //   }
       // })
-
       return $.ajax({
         data: [this.$form.serialize(), $.param(off_check_box)].join('&'),
         url: this.$form.attr('action'),
@@ -219,6 +216,5 @@
 
   $.fn.exform.renders.push(function(f){
     f.find('a.btn-ajax').ajax_addbtn()
-  })
-
+  });
 })(jQuery)
