@@ -91,3 +91,5 @@ class BatchChangeAction(BaseActionView):
         media = media + self.form_obj.media + self.vendor(
             'xadmin.page.form.js', 'xadmin.form.css')
         return media
+
+
