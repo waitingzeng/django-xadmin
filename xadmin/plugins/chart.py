@@ -11,6 +11,8 @@ from django.utils.encoding import smart_unicode
 from django.db import models
 from django.utils.http import urlencode
 from django.utils.translation import ugettext_lazy as _, ugettext
+from django.db.models import FieldDoesNotExist, Avg, Max, Min, Count, Sum
+
 
 from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ListAdminView
@@ -99,16 +101,39 @@ class ChartsPlugin(BaseAdminPlugin):
         })
         nodes.append(loader.render_to_string('xadmin/blocks/model_list.results_top.charts.html', context_instance=context))
 
+ANNOTATE_METHODS = {
+    'min': Min, 'max': Max, 'avg': Avg, 'sum': Sum, 'count': Count
+}
+
 
 class ChartsView(ListAdminView):
 
     data_charts = {}
-
+    annotate_fields = {}
     def get_ordering(self):
         if 'order' in self.chart:
             return self.chart['order']
         else:
             return super(ChartsView, self).get_ordering()
+
+    def get_annotate_dict(self):
+        annotate_dict = {}
+        if self.annotate_fields:
+            for name in self.y_fields:
+                if name in self.annotate_fields:
+                    annotate_dict[name] = self.annotate_fields[name]
+        self.annotate_dict = annotate_dict
+
+    def get_list_queryset(self):
+        queryset = ListAdminView.get_list_queryset(self)
+        params = self.chart.get('params', {})
+        queryset = queryset.filter(**params)
+        
+        if self.annotate_dict:
+            annotate_sql = {name: ANNOTATE_METHODS[method](field_name) for name, (method, field_name) in self.annotate_dict.items() if method in ANNOTATE_METHODS}
+            queryset = queryset.values(self.x_field).annotate(**annotate_sql)
+        return queryset
+
 
     def get(self, request, name):
         if name not in self.data_charts:
@@ -121,18 +146,29 @@ class ChartsView(ListAdminView):
         self.y_fields = (
             y_fields,) if type(y_fields) not in (list, tuple) else y_fields
 
-        datas = [{"data":[], "label": label_for_field(
-            i, self.model, model_admin=self)} for i in self.y_fields]
+        self.get_annotate_dict()
 
         self.make_result_list()
+        if not self.annotate_dict:
+            datas = [{"data":[], "label": label_for_field(
+                i, self.model, model_admin=self)} for i in self.y_fields]
 
-        for obj in self.result_list:
-            xf, attrs, value = lookup_field(self.x_field, obj, self)
-            for i, yfname in enumerate(self.y_fields):
-                yf, yattrs, yv = lookup_field(yfname, obj, self)
-                datas[i]["data"].append((value, yv))
+            
+            for obj in self.result_list:
+                xf, attrs, value = lookup_field(self.x_field, obj, self)
+                for i, yfname in enumerate(self.y_fields):
+                    yf, yattrs, yv = lookup_field(yfname, obj, self)
+                    datas[i]["data"].append((value, yv))
+        else:
+            datas = [{"data":[], "label": i} for i in self.y_fields]
+            
+            for obj in self.result_list:
+                value = obj[self.x_field]
+                for i, yfname in enumerate(self.y_fields):
+                    yv = obj[yfname]
+                    datas[i]["data"].append((value, yv))
 
-        option = {'series': {'lines': {'show': True}, 'points': {'show': False}},
+        option = {'series': {'lines': {'show': True}, 'points': {'show': True}},
                   'grid': {'hoverable': True, 'clickable': True}}
         try:
             xfield = self.opts.get_field(self.x_field)

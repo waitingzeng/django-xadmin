@@ -9,7 +9,6 @@ import urllib
 from django import forms
 from django.template.response import TemplateResponse
 import logging
-from django.http.request import QueryDict
 
 
 
