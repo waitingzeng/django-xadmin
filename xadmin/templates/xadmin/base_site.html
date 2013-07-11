@@ -9,7 +9,7 @@
   <div id="top-nav" class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
       <div class="container-fluid">
-        <a class="brand" href="#">{% block branding %}{{ site_title }}{% endblock %}</a>
+        <a class="brand" href="{{ site_url }}">{% block branding %}{{ site_title }}{% endblock %}</a>
         <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-menu.nav-collapse">
           <span class="icon-list"></span>
         </a>
@@ -91,6 +91,7 @@
         {% block breadcrumbs %}
         <ul class="breadcrumb">
         <li><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> <li>
+        {% view_block 'extra_breadcrumbs' %}
         {% if title %} &rsaquo; {{ title }}{% endif %}
         </ul>
         {% endblock %}

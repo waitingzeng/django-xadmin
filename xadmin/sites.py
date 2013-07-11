@@ -92,6 +92,7 @@ class AdminSite(object):
                                                'cannot be registered with admin.' % model.__name__)
 
                 if model in self._registry:
+                    continue
                     raise AlreadyRegistered(
                         'The model %s is already registered' % model.__name__)
 
@@ -287,6 +288,7 @@ class AdminSite(object):
                                 )
 
         # Add in each model's views.
+        
         for model, admin_class in self._registry.iteritems():
             view_urls = [url(
                 path, wrap(

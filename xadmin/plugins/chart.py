@@ -128,7 +128,8 @@ class ChartsView(ListAdminView):
         queryset = ListAdminView.get_list_queryset(self)
         params = self.chart.get('params', {})
         queryset = queryset.filter(**params)
-        
+        if hasattr(self, 'get_charts_queryset'):
+            return self.get_charts_queryset(queryset)
         if self.annotate_dict:
             annotate_sql = {name: ANNOTATE_METHODS[method](field_name) for name, (method, field_name) in self.annotate_dict.items() if method in ANNOTATE_METHODS}
             queryset = queryset.values(self.x_field).annotate(**annotate_sql)
@@ -146,10 +147,10 @@ class ChartsView(ListAdminView):
         self.y_fields = (
             y_fields,) if type(y_fields) not in (list, tuple) else y_fields
 
-        self.get_annotate_dict()
+        #self.get_annotate_dict()
 
         self.make_result_list()
-        if not self.annotate_dict:
+        if False:
             datas = [{"data":[], "label": label_for_field(
                 i, self.model, model_admin=self)} for i in self.y_fields]
 

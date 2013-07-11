@@ -284,6 +284,7 @@ class CommAdminView(BaseAdminView):
     base_template = 'xadmin/base_site.html'
 
     site_title = None
+    site_url = '#'
     globe_models_icon = {}
     default_model_icon = None
 

@@ -1,5 +1,5 @@
 import copy
-
+import logging
 from django import forms
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
@@ -309,6 +309,7 @@ class ModelBaseWidget(BaseWidget):
         super(ModelBaseWidget, self).setup()
 
     def has_perm(self):
+        return True
         return self.dashboard.has_model_perm(self.model, self.model_perm)
 
     def filte_choices_model(self, model, modeladmin):
@@ -353,6 +354,7 @@ class QuickBtnWidget(BaseWidget):
         self.q_btns = data.pop('btns', [])
 
     def get_model(self, model_or_label):
+        import pdb; pdb.set_trace()
         if isinstance(model_or_label, ModelBase):
             return model_or_label
         else:
@@ -486,6 +488,7 @@ class Dashboard(CommAdminView):
                     widget.save()
                     portal_col.append(self.get_widget(widget))
                 except (PermissionDenied, WidgetDataError):
+                    logging.error('add widget fail %s', opts, exc_info=True)
                     widget.delete()
                     continue
             portal.append(portal_col)
