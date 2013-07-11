@@ -101,40 +101,33 @@ class ChartsPlugin(BaseAdminPlugin):
         })
         nodes.append(loader.render_to_string('xadmin/blocks/model_list.results_top.charts.html', context_instance=context))
 
-ANNOTATE_METHODS = {
-    'min': Min, 'max': Max, 'avg': Avg, 'sum': Sum, 'count': Count
-}
-
 
 class ChartsView(ListAdminView):
 
     data_charts = {}
-    annotate_fields = {}
+
     def get_ordering(self):
         if 'order' in self.chart:
             return self.chart['order']
         else:
             return super(ChartsView, self).get_ordering()
 
-    def get_annotate_dict(self):
-        annotate_dict = {}
-        if self.annotate_fields:
-            for name in self.y_fields:
-                if name in self.annotate_fields:
-                    annotate_dict[name] = self.annotate_fields[name]
-        self.annotate_dict = annotate_dict
+    def get_list_where_sql(self):
+        queryset = self.get_list_queryset().filter(**self.chart.get('params', {}))
+        sql = str(queryset.query)
+        return sql.split('WHERE', 1)[1]
+        
+    def get_model_data(self):
+        self.make_result_list()
+        datas = [{"data":[], "label": label_for_field(
+            i, self.model, model_admin=self)} for i in self.y_fields]
 
-    def get_list_queryset(self):
-        queryset = ListAdminView.get_list_queryset(self)
-        params = self.chart.get('params', {})
-        queryset = queryset.filter(**params)
-        if hasattr(self, 'get_charts_queryset'):
-            return self.get_charts_queryset(queryset)
-        if self.annotate_dict:
-            annotate_sql = {name: ANNOTATE_METHODS[method](field_name) for name, (method, field_name) in self.annotate_dict.items() if method in ANNOTATE_METHODS}
-            queryset = queryset.values(self.x_field).annotate(**annotate_sql)
-        return queryset
-
+        
+        for obj in self.result_list:
+            xf, attrs, value = lookup_field(self.x_field, obj, self)
+            for i, yfname in enumerate(self.y_fields):
+                yf, yattrs, yv = lookup_field(yfname, obj, self)
+                datas[i]["data"].append((value, yv))
 
     def get(self, request, name):
         if name not in self.data_charts:
@@ -147,28 +140,11 @@ class ChartsView(ListAdminView):
         self.y_fields = (
             y_fields,) if type(y_fields) not in (list, tuple) else y_fields
 
-        #self.get_annotate_dict()
-
-        self.make_result_list()
-        if False:
-            datas = [{"data":[], "label": label_for_field(
-                i, self.model, model_admin=self)} for i in self.y_fields]
-
-            
-            for obj in self.result_list:
-                xf, attrs, value = lookup_field(self.x_field, obj, self)
-                for i, yfname in enumerate(self.y_fields):
-                    yf, yattrs, yv = lookup_field(yfname, obj, self)
-                    datas[i]["data"].append((value, yv))
+        if not hasattr(self, 'get_%s_chart_data' % name):
+            datas = self.get_model_data()
         else:
-            datas = [{"data":[], "label": i} for i in self.y_fields]
-            
-            for obj in self.result_list:
-                value = obj[self.x_field]
-                for i, yfname in enumerate(self.y_fields):
-                    yv = obj[yfname]
-                    datas[i]["data"].append((value, yv))
-
+            datas = getattr(self, 'get_%s_chart_data' % name)()
+     
         option = {'series': {'lines': {'show': True}, 'points': {'show': True}},
                   'grid': {'hoverable': True, 'clickable': True}}
         try:

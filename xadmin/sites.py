@@ -8,6 +8,8 @@ from django.db.models.base import ModelBase
 from django.http import HttpResponseRedirect
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
+from django.utils.translation import ugettext as _
+
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
@@ -288,8 +290,9 @@ class AdminSite(object):
                                 )
 
         # Add in each model's views.
-        
+        app_labels = set()
         for model, admin_class in self._registry.iteritems():
+            app_labels.add(model._meta.app_label)
             view_urls = [url(
                 path, wrap(
                     self.create_model_admin_view(clz, model, admin_class)),
@@ -301,6 +304,10 @@ class AdminSite(object):
                                         model._meta.app_label, model._meta.module_name),
                                     include(patterns('', *view_urls)))
                                     )
+
+        from xadmin.views.website import AppListIndexView
+        urlpatterns += patterns('',
+                        url('^(?P<app_label>\w+)$', wrap(self.create_admin_view(AppListIndexView)), name='app_list'))
 
         return urlpatterns
 

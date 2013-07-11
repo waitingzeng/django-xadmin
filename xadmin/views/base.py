@@ -26,6 +26,7 @@ from django.utils.translation import ugettext as _
 from django.views.decorators.csrf import csrf_protect
 from django.views.generic import View
 from xadmin.util import static, json, vendor
+from django.db import connections
 
 
 csrf_protect_m = method_decorator(csrf_protect)
@@ -194,6 +195,9 @@ class BaseAdminObject(object):
 
     def vendor(self, *tags):
         return vendor(*tags)
+
+    def get_db_connection(self):
+        return connections[self.model.objects.db]
 
 
 class BaseAdminPlugin(BaseAdminObject):

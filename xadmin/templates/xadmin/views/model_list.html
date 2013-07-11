@@ -20,6 +20,7 @@
 {% block breadcrumbs %}
 <ul class="breadcrumb">
   <li><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> <span class="divider">/</span></li>
+  <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_label|capfirst|escape }}</a> <span class="divider">/</span></li>
   {% view_block 'extra_breadcrumbs' %}
   <li class="active">{{ cl.opts.verbose_name_plural|capfirst }}</li>
 </ul>

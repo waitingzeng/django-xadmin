@@ -10,12 +10,26 @@ from dashboard import Dashboard
 from xadmin.forms import AdminAuthenticationForm
 from xadmin.models import UserSettings
 from xadmin.layout import FormHelper
+from django.views.decorators.cache import never_cache
+
 
 
 class IndexView(Dashboard):
     title = _("Main Dashboard")
     icon = "dashboard"
 
+class AppListIndexView(IndexView):
+
+    def get(self, request, app_label):
+        self.app_label = app_label
+        self.title = _("%s Dashboard" % app_label)
+        return super(IndexView, self).get(request)
+
+    def post(self, request, app_label):
+        self.app_label = app_label
+        self.title = _("%s Dashboard" % app_label)
+        return super(IndexView, self).post(request)
+    
 
 class UserSettingView(BaseAdminView):
 
@@ -35,6 +49,7 @@ class LoginView(BaseAdminView):
     title = _("Please Login")
     login_form = None
     login_template = None
+    login_func = None
 
     @filter_hook
     def update_params(self, defaults):
@@ -42,6 +57,8 @@ class LoginView(BaseAdminView):
 
     @never_cache
     def get(self, request, *args, **kwargs):
+        if self.login_func:
+            return self.login_func(request, *args, **kwargs)
         context = self.get_context()
         helper = FormHelper()
         helper.form_tag = False
