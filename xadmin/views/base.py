@@ -329,6 +329,8 @@ class CommAdminView(BaseAdminView):
                 nav_menu[app_key] = {
                     'title': unicode(app_label.title()),
                     'menus': [model_dict],
+                    'url':  reverse('%s:app_list' % (self.admin_site.app_name,),
+                        args=[model._meta.app_label], current_app=self.admin_site.name)
                 }
 
             app_menu = nav_menu[app_key]
@@ -388,7 +390,7 @@ class CommAdminView(BaseAdminView):
                 for m in menu['menus']:
                     _s = check_selected(m, path)
                     if _s:
-                        selected = True
+                        selected = False
             if selected:
                 menu['selected'] = True
             return selected
@@ -493,6 +495,7 @@ class ModelAdminView(CommAdminView):
         """
         return self.ordering or ()  # otherwise we might try to *None, which is bad ;)
 
+    @filter_hook
     def queryset(self):
         """
         Returns a QuerySet of all model instances that can be edited by the

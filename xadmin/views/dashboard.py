@@ -1,5 +1,6 @@
 import copy
 import logging
+import urlparse
 from django import forms
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
@@ -332,13 +333,18 @@ class PartialBaseWidget(BaseWidget):
 
     def setup_request(self, request):
         request.user = self.user
+        request.cookies = self.request.cookies
         return request
 
     def make_get_request(self, path, data={}, **extra):
+        if not path:
+            path = self.request.path
         req = self.get_factory().get(path, data, **extra)
         return self.setup_request(req)
 
     def make_post_request(self, path, data={}, **extra):
+        if not path:
+            path = self.request.path
         req = self.get_factory().post(path, data, **extra)
         return self.setup_request(req)
 
@@ -354,7 +360,6 @@ class QuickBtnWidget(BaseWidget):
         self.q_btns = data.pop('btns', [])
 
     def get_model(self, model_or_label):
-        import pdb; pdb.set_trace()
         if isinstance(model_or_label, ModelBase):
             return model_or_label
         else:
@@ -398,7 +403,9 @@ class ListWidget(ModelBaseWidget, PartialBaseWidget):
         if not self.title:
             self.title = self.model._meta.verbose_name_plural
 
-        req = self.make_get_request("", self.list_params)
+        get_params = dict(urlparse.parse_qsl(self.request.META['QUERY_STRING']))
+        get_params.update(self.list_params)
+        req = self.make_get_request(request.path, get_params)
         self.list_view = self.get_view_class(
             ListAdminView, self.model, list_per_page=10)(req)
 

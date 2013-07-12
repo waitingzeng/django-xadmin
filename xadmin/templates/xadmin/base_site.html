@@ -49,12 +49,12 @@
                 {% for sitem in item.menus %}
                 <li{% if sitem.selected %} class="active"{% endif %}>
                   {% if sitem.url %}<a href="{{ sitem.url }}">{% endif %}
-                  {% if sitem.icon %}<i class="icon-{{sitem.icon}}"></i>{% endif %}
+                  &nbsp;{% if sitem.icon %}<i class="icon-{{sitem.icon}}"></i>{% endif %}
                   {{ sitem.title }}</span>{% if sitem.url %}</a>{% endif %}
                 </li>
                 {% endfor %}
               {% endfor %}
-            {% view_block 'menu-nav' %}
+            {% view_block 'menu_nav' %}
             </ul>
             <ul class="nav nav-list visible-tablet">
               {% for item in nav_menu %}
