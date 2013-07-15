@@ -333,7 +333,7 @@ class PartialBaseWidget(BaseWidget):
 
     def setup_request(self, request):
         request.user = self.user
-        request.cookies = self.request.cookies
+        request.COOKIES = self.request.COOKIES
         return request
 
     def make_get_request(self, path, data={}, **extra):
@@ -405,7 +405,7 @@ class ListWidget(ModelBaseWidget, PartialBaseWidget):
 
         get_params = dict(urlparse.parse_qsl(self.request.META['QUERY_STRING']))
         get_params.update(self.list_params)
-        req = self.make_get_request(request.path, get_params)
+        req = self.make_get_request(self.request.path, get_params)
         self.list_view = self.get_view_class(
             ListAdminView, self.model, list_per_page=10)(req)
 
