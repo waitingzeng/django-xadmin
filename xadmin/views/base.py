@@ -197,7 +197,8 @@ class BaseAdminObject(object):
         return vendor(*tags)
 
     def get_db_connection(self):
-        return connections[self.model.objects.db]
+        qs = self.queryset()
+        return connections[qs.db]
 
 
 class BaseAdminPlugin(BaseAdminObject):

@@ -68,6 +68,7 @@ class ChartWidget(ModelBaseWidget):
 
 
 class JSONEncoder(DjangoJSONEncoder):
+
     def default(self, o):
         if isinstance(o, (datetime.date, datetime.datetime)):
             return calendar.timegm(o.timetuple()) * 1000
@@ -99,7 +100,8 @@ class ChartsPlugin(BaseAdminPlugin):
         context.update({
             'charts': [{"name": name, "title": v['title'], 'url': self.get_chart_url(name, v)} for name, v in self.data_charts.items()],
         })
-        nodes.append(loader.render_to_string('xadmin/blocks/model_list.results_top.charts.html', context_instance=context))
+        nodes.append(loader.render_to_string(
+            'xadmin/blocks/model_list.results_top.charts.html', context_instance=context))
 
 
 class ChartsView(ListAdminView):
@@ -113,16 +115,16 @@ class ChartsView(ListAdminView):
             return super(ChartsView, self).get_ordering()
 
     def get_list_where_sql(self):
-        queryset = self.get_list_queryset().filter(**self.chart.get('params', {}))
+        queryset = self.get_list_queryset().filter(
+            **self.chart.get('params', {}))
         sql = str(queryset.query)
         return sql.split('WHERE', 1)[1]
-        
+
     def get_model_data(self):
         self.make_result_list()
-        datas = [{"data":[], "label": label_for_field(
+        datas = [{"data": [], "label": label_for_field(
             i, self.model, model_admin=self)} for i in self.y_fields]
 
-        
         for obj in self.result_list:
             xf, attrs, value = lookup_field(self.x_field, obj, self)
             for i, yfname in enumerate(self.y_fields):
@@ -144,9 +146,10 @@ class ChartsView(ListAdminView):
             datas = self.get_model_data()
         else:
             datas = getattr(self, 'get_%s_chart_data' % name)()
-     
-        option = {'series': {'lines': {'show': True}, 'points': {'show': True}},
-                  'grid': {'hoverable': True, 'clickable': True}}
+
+        option = {
+            'series': {'lines': {'show': True}, 'points': {'show': True}},
+            'grid': {'hoverable': True, 'clickable': True}}
         try:
             xfield = self.opts.get_field(self.x_field)
             if type(xfield) in (models.DateTimeField, models.DateField, models.TimeField):
