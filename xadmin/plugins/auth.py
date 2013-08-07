@@ -73,6 +73,8 @@ class UserAdmin(object):
 
 class PermissionAdmin(object):
     model_icon = 'lock'
+    search_fields = ['content_type__name', 'codename', 'name']
+    list_filter = ['content_type']
 
 site.register(Group, GroupAdmin)
 site.register(User, UserAdmin)
