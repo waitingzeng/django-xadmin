@@ -172,8 +172,13 @@
         var self = this
         modal.find('.modal-body').html('<div class="progress progress-striped active" style="width:50%; margin: 10px auto;"><div class="bar" style="width: 100%;"></div></div>')
         modal.find('.modal-body').load(this.add_url, function(form_html, status, xhr){
-          var form = $(this).find('form')
-          form.addClass('quick-form')
+          var form = modal.find('form');
+          console.log(form.length);
+          if(form.length == 0){
+            modal.find('.btn-submit').remove();
+            return;
+          }
+          form.addClass('quick-form');
           form.on('post-success', $.proxy(self.post, self))
           form.exform()
 
@@ -230,4 +235,5 @@
   $.fn.exform.renders.push(function(f){
     f.find('a.btn-ajax').ajax_addbtn()
   });
+  $('.btn-ajax').ajax_addbtn();
 })(jQuery)

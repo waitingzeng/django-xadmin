@@ -48,6 +48,7 @@ class ReadOnlyField(Field):
     def render(self, form, form_style, context):
         html = ''
         for field in self.fields:
+            print self.detail
             result = self.detail.get_field_result(field)
             field = {'auto_id': field}
             html += loader.render_to_string(
