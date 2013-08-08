@@ -87,7 +87,7 @@ class UserAdmin(object):
 
     @property
     def media(self):
-        media = vendor(
+        media = super(UserAdmin, self).media + vendor(
             'xadmin.plugin.quick-form.js', 'xadmin.modal.css')
         return media
 
