@@ -11,13 +11,7 @@
     this.from_box = el.find('.selector-available select');
     this.to_box = el.find('.selector-chosen select');
 
-    var findForm = function(node) {
-        if (node.tagName.toLowerCase() != 'form') {
-            return findForm(node.parentNode);
-        }
-        return node;
-    }
-    this.form = $(findForm(element));
+    this.form = this.el.parents('form');
 
     // link
     this.btn_add_all = el.find(".btn.selector-chooseall");
@@ -34,7 +28,6 @@
 
     this.from_box.on('dblclick', $.proxy(this.move, this));
     this.to_box.on('dblclick', $.proxy(this.remove, this));
-    this.to_box.on('blur', $.proxy(this.select_all, this));
 
     this.btn_add.on('click', $.proxy(this.move, this));
     this.btn_remove.on('click', $.proxy(this.remove, this));
@@ -72,7 +65,7 @@
               select.options[select.options.length] = new Option(node.text, node.value, false, false);
           }
       }
-      this.select_all();
+      //this.select_all();
     },
     filter: function(text) {
       // Redisplay the HTML select box, displaying only the choices containing ALL

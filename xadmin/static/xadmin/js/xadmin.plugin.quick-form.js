@@ -177,8 +177,21 @@
           form.on('post-success', $.proxy(self.post, self))
           form.exform()
 
-          modal.find('.btn-submit').click(function(){form.submit()})
+          function select_all(box) {
+              if(!box){
+                return false;
+              }
+              var box = box[0];
+              for (var i = 0; i < box.options.length; i++) {
+                  box.options[i].selected = 'selected';
+              }
+          }
 
+          modal.find('.btn-submit').click(function(){
+            select_all(modal.find('.select-transfer .selector-chosen select'));
+            form.submit();
+          });
+            
           self.$form = form
         })
         this.modal = modal
