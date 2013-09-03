@@ -292,6 +292,7 @@ class CommAdminView(BaseAdminView):
     site_url = '#'
     globe_models_icon = {}
     default_model_icon = None
+    nav_app_label = None
 
     def get_site_menu(self):
         return None
@@ -313,6 +314,8 @@ class CommAdminView(BaseAdminView):
 
         for model, model_admin in self.admin_site._registry.items():
             app_label = model._meta.app_label
+            if self.nav_app_label and self.nav_app_label != app_label:
+                continue
 
             model_dict = {
                 'title': unicode(capfirst(model._meta.verbose_name_plural)),
