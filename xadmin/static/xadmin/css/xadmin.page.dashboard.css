@@ -2,36 +2,25 @@
 .dashboard.container-fluid {
     padding-left: 0px;
 }
-
-.box .table{
-    margin-bottom: 0px;
+.dashboard .column{
+  min-height: 60px;
 }
 
-.box-content.tabs {
-    padding: 5px;
+.widget {
+  position: relative;
 }
-
-.box-content > form, form.box-form {
-  margin-bottom: 0px;
-}
-.box-form .modal-body{
-  padding: 0px;
-}
-
-/* Quick Form */
-.modal.quick-form .modal-body{
-  padding: 0px;
-  max-height: none;
-}
-.modal.quick-form .modal-body form{
-  margin-bottom: 0px;
+.widget_options {
+  overflow: visible;
+  position: absolute;
 }
 
 /* Quick Buttons
 =================================================================== */
-
+.qbutton .panel-body {
+  padding-top: 5px;
+}
 .btn-quick {
-    margin-bottom: -1px;
+    margin-top: 10px;
     padding: 20px 0px 0px 0px;
     font-size: 15px;
     display:block;

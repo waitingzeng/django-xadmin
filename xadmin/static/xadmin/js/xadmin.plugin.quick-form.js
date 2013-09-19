@@ -4,7 +4,7 @@
   $('form.widget-form').on('post-success', function(e, data){
     $(this).data('ajaxform').clean()
     $('.alert-success #change-link').attr('href', data['change_url'])
-    $('.alert-success').show();
+    $('.alert-success').show()
   })
 
   var AjaxForm = function(element, options) {
@@ -19,7 +19,7 @@
     constructor: AjaxForm
 
     , ainit: function(){
-      this.$mask = $('<div class="mask"><div class="progress progress-striped active"><div class="bar"></div></div></div>')
+      this.$mask = $('<div class="mask"><h1 style="text-align:center;"><i class="icon-spinner icon-spin icon-large"></i></h1></div>')
 
       this.$form.prepend(this.$mask)
       this.$form.submit($.proxy(this.submit, this))
@@ -53,22 +53,24 @@
     , submit: function(e) {
         e.stopPropagation();
         e.preventDefault();
+
         $.when(this.save())
         .done($.proxy(function(data) {
           this.$mask.hide();
 
           this.$form.find('submit, button[type=submit], input[type=submit]').removeClass('disabled');
-          this.$form.find('.alert-success').hide();
+          this.$form.find('.alert-success').hide()
+
           if(data['result'] != 'success' && data['errors']){
             var non_fields_errors = []
             for (var i = data['errors'].length - 1; i >= 0; i--) {
               var e = data['errors'][i]
               var errdiv = this.$form.find('#div_' + e['id'])
               if(errdiv.length){
-                errdiv.addClass('error')
+                errdiv.addClass('has-error')
                 var err_html = []
                 for (var j = e['errors'].length - 1; j >= 0; j--) {
-                  err_html.push('<span id="error_'+j+'_'+ e['id'] +'" class="help-inline error"><strong>'+e['errors'][j]+'</strong></span>')
+                  err_html.push('<span id="error_'+j+'_'+ e['id'] +'" class="text-danger">'+e['errors'][j]+'</span>')
                 }
                 errdiv.find('.controls').append(err_html.join('\n'))
               } else {
@@ -78,7 +80,7 @@
             if(non_fields_errors.length){
               var err_html = []
               for (var i = non_fields_errors.length - 1; i >= 0; i--) {
-                err_html.push('<p class="text-error"><strong>'+e['errors'][i]+'</strong></p>')
+                err_html.push('<p class="text-danger"><strong>'+e['errors'][i]+'</strong></p>')
               }
               this.$form.prepend(err_html.join('\n'))
             }
@@ -105,6 +107,7 @@
       //     off_check_box[$(this).attr('name')] = '';
       //   }
       // })
+
       return $.ajax({
         data: [this.$form.serialize(), $.param(off_check_box)].join('&'),
         url: this.$form.attr('action'),
@@ -163,60 +166,54 @@
       e.preventDefault()
 
       if(!this.modal){
-        var modal = $('<div class="modal container hide fade quick-form" role="dialog"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button><h3>'+ 
+        var modal = $('<div class="modal fade quick-form" role="dialog"><div class="modal-dialog"><div class="modal-content">'+
+          '<div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h3>'+ 
           this.$btn.attr('title') +'</h3></div><div class="modal-body"></div>'+
-          '<div class="modal-footer"><button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>'+
-          '<a class="btn btn-primary btn-submit">Add</a></div></div>')
+          '<div class="modal-footer" style="display: none;"><button class="btn btn-default" data-dismiss="modal" aria-hidden="true">'+gettext('Close')+'</button>'+
+          '<a class="btn btn-primary btn-submit">'+gettext('Add')+'</a></div></div></div></div>')
         $('body').append(modal)
 
         var self = this
-        modal.find('.modal-body').html('<div class="progress progress-striped active" style="width:50%; margin: 10px auto;"><div class="bar" style="width: 100%;"></div></div>')
+        modal.find('.modal-body').html('<h2 style="text-align:center;"><i class="icon-spinner icon-spin icon-large"></i></h2>')
         modal.find('.modal-body').load(this.add_url, function(form_html, status, xhr){
-          var form = modal.find('form');
-          console.log(form.length);
-          if(form.length == 0){
-            modal.find('.btn-submit').remove();
-            return;
-          }
-          form.addClass('quick-form');
+          var form = $(this).find('form')
+          form.addClass('quick-form')
           form.on('post-success', $.proxy(self.post, self))
           form.exform()
+          
+          modal.find('.modal-footer').show()
+          modal.find('.btn-submit').click(function(){form.submit()})
 
-          function select_all(box) {
-              if(!box){
-                return false;
-              }
-              var box = box[0];
-              for (var i = 0; i < box.options.length; i++) {
-                  box.options[i].selected = 'selected';
-              }
-          }
-
-          modal.find('.btn-submit').click(function(){
-            select_all(modal.find('.select-transfer .selector-chosen select'));
-            form.submit();
-          });
-            
           self.$form = form
         })
         this.modal = modal
       }
-      this.modal.modal()
+      this.modal.modal().css(
+          {
+              'margin-top': function () {
+                  return window.pageYOffset;
+              }
+          });
 
       return false
     }
     , post: function(e, data){
-      this.$form.data('ajaxform').clean()
+      this.$form.data('ajaxform').clean();
       var wrap = this.$for_wrap;
-      if(this.refresh_url == '#'){
-        window.location.href = window.location.href;
-        return;
+      var input = this.$for_input;
+      var selected = [data['obj_id']];
+      if (input.attr('multiple')){
+          var opt = 'option';
+          if (input.hasClass('selectdropdown') || input.hasClass('select-multi')){
+              opt = 'option:selected';
+          }
+          selected.push($.map(input.find(opt) ,function(opt) { return opt.value; }));
       }
-      $.get(this.refresh_url + data['obj_id'], function(form_html, status, xhr){
-        wrap.html($('<body>' + form_html + '</body>').find('#' + wrap.attr('id')).html())
-        wrap.exform()
-      })
-      this.modal.modal('hide')
+      $.get(this.refresh_url + selected.join() ,function(form_html, status, xhr){
+        wrap.html($('<body>' + form_html + '</body>').find('#' + wrap.attr('id')).html());
+        wrap.exform();
+      });
+      this.modal.modal('hide');
     }
 
   }
@@ -234,6 +231,6 @@
 
   $.fn.exform.renders.push(function(f){
     f.find('a.btn-ajax').ajax_addbtn()
-  });
-  $('.btn-ajax').ajax_addbtn();
+  })
+
 })(jQuery)

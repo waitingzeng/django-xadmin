@@ -1,8 +1,11 @@
-django-xadmin |Build Status|
-============================
+django-xadmin |Build Status| |Build Status2|
+============================================
 
 .. |Build Status| image:: https://travis-ci.org/sshwsfc/django-xadmin.png?branch=master
    :target: https://travis-ci.org/sshwsfc/django-xadmin
+
+.. |Build Status2| image:: https://drone.io/github.com/sshwsfc/django-xadmin/status.png
+   :target: https://drone.io/github.com/sshwsfc/django-xadmin/latest
 
 Drop-in replacement of Django admin comes with lots of goodies, fully extensible with plugin support, pretty UI based on Twitter Bootstrap.
 
@@ -69,9 +72,9 @@ Install Requires
 
 -  `django-crispy-forms`_ >=1.2.3 (For xadmin crispy forms)
 
--  `django-reversion`_ (For object history and reversion feature, please select right version by your django, see `changelog`_ )
+-  `django-reversion`_ ([OPTION] For object history and reversion feature, please select right version by your django, see `changelog`_ )
 
--  `xlwt`_ (For export xls files, option)
+-  `xlwt`_ ([OPTION] For export xls files)
 
 .. _django: http://djangoproject.com
 .. _django-crispy-forms: http://django-crispy-forms.rtfd.org

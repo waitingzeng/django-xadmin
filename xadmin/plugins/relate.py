@@ -57,7 +57,7 @@ class RelateMenuPlugin(BaseAdminPlugin):
                             reverse('%s:%s_%s_changelist' % (
                                     self.admin_site.app_name, label, model_name)),
                             RELATE_PREFIX + lookup_name, str(instance.pk), verbose_name, verbose_name) if view_perm else
-                            '<a><span class="muted"><i class="icon icon-blank"></i> %s</span></a>' % verbose_name,
+                            '<a><span class="text-muted"><i class="icon icon-blank"></i> %s</span></a>' % verbose_name,
 
                             '<a class="add_link dropdown-menu-btn" href="%s?%s=%s"><i class="icon icon-plus pull-right"></i></a>' %
                           (
@@ -70,9 +70,11 @@ class RelateMenuPlugin(BaseAdminPlugin):
             links.append(link)
         ul_html = '<ul class="dropdown-menu" role="menu">%s</ul>' % ''.join(
             links)
-        return '<div class="dropdown related_menu pull-left"><a title="%s" class="relate_menu dropdown-toggle" data-toggle="dropdown"><i class="icon icon-list"></i></a>%s</div>' % (_('Related Objects'), ul_html)
+        return '<div class="dropdown related_menu pull-right"><a title="%s" class="relate_menu dropdown-toggle" data-toggle="dropdown"><i class="icon icon-list"></i></a>%s</div>' % (_('Related Objects'), ul_html)
     related_link.short_description = '&nbsp;'
     related_link.allow_tags = True
+    related_link.allow_export = False
+    related_link.is_column = False
 
     def get_list_display(self, list_display):
         if self.use_related_menu and len(self.get_related_list()):
@@ -119,7 +121,7 @@ class RelateObject(object):
         else:
             to_model_name = force_unicode(self.to_model._meta.verbose_name)
 
-        return mark_safe(u"<span class='rel-brand'>%s's</span> %s" % (to_model_name, force_unicode(self.opts.verbose_name)))
+        return mark_safe(u"<span class='rel-brand'>%s <i class='icon-caret-right'></i></span> %s" % (to_model_name, force_unicode(self.opts.verbose_name)))
 
 
 class BaseRelateDisplayPlugin(BaseAdminPlugin):
@@ -155,6 +157,7 @@ class ListRelateDisplayPlugin(BaseRelateDisplayPlugin):
 
     def get_context(self, context):
         context['brand_name'] = self.relate_obj.get_brand_name()
+        context['rel_objs'] = self.relate_obj.to_objs
         if 'add_url' in context:
             context['add_url'] = self._get_url(context['add_url'])
         return context

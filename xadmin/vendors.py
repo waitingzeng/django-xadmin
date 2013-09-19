@@ -2,15 +2,19 @@
 vendors = {
     "bootstrap": {
         'js': {
-            'dev': 'xadmin/vendor/bootstrap/bootstrap.js',
-            'production': 'xadmin/vendor/bootstrap/bootstrap.min.js',
+            'dev': 'xadmin/vendor/bootstrap/js/bootstrap.js',
+            'production': 'xadmin/vendor/bootstrap/js/bootstrap.min.js',
             'cdn': 'http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js'
         },
         'css': {
-            'dev': ['xadmin/vendor/bootstrap/bootstrap.css', 'xadmin/vendor/bootstrap/bootstrap-responsive.css'],
-            'production': ['xadmin/vendor/bootstrap/bootstrap.css', 'xadmin/vendor/bootstrap/bootstrap-responsive.css'],
+            'dev': 'xadmin/vendor/bootstrap/css/bootstrap.css',
+            'production': 'xadmin/vendor/bootstrap/css/bootstrap.css',
             'cdn': 'http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css'
-        }
+        },
+        'responsive': {'css':{
+                'dev': 'xadmin/vendor/bootstrap/bootstrap-responsive.css',
+                'production': 'xadmin/vendor/bootstrap/bootstrap-responsive.css'
+            }}
     },
     'jquery': {
         "js": {
@@ -65,11 +69,11 @@ vendors = {
     "image-gallery": {
         "css": {
             'dev': 'xadmin/vendor/bootstrap-image-gallery/css/bootstrap-image-gallery.css',
-            'production': 'xadmin/vendor/bootstrap-image-gallery/css/bootstrap-image-gallery.min.css',
+            'production': 'xadmin/vendor/bootstrap-image-gallery/css/bootstrap-image-gallery.css',
         },
         "js": {
             'dev': ['xadmin/vendor/load-image/load-image.js', 'xadmin/vendor/bootstrap-image-gallery/js/bootstrap-image-gallery.js'],
-            'production': ['xadmin/vendor/load-image/load-image.min.js', 'xadmin/vendor/bootstrap-image-gallery/js/bootstrap-image-gallery.min.js']
+            'production': ['xadmin/vendor/load-image/load-image.min.js', 'xadmin/vendor/bootstrap-image-gallery/js/bootstrap-image-gallery.js']
         }
     },
     "select2": {
@@ -87,6 +91,14 @@ vendors = {
         },
         "js": {
             'dev': 'xadmin/vendor/bootstrap-multiselect/js/bootstrap-multiselect.js',
+        }
+    },
+    "snapjs": {
+        "css": {
+            'dev': 'xadmin/vendor/snapjs/snap.css',
+        },
+        "js": {
+            'dev': 'xadmin/vendor/snapjs/snap.js',
         }
     },
 }

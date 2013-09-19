@@ -1,3 +1,4 @@
+import sys
 import copy
 import functools
 import datetime
@@ -190,6 +191,14 @@ class BaseAdminObject(object):
     def template_response(self, template, context):
         return TemplateResponse(self.request, template, context, current_app=self.admin_site.name)
 
+    def message_user(self, message, level='info'):
+        """
+        Send a message to the user. The default implementation
+        posts a message using the django.contrib.messages backend.
+        """
+        if hasattr(messages, level) and callable(getattr(messages, level)):
+            getattr(messages, level)(self.request, message)
+
     def static(self, path):
         return static(path)
 
@@ -219,6 +228,7 @@ class BaseAdminView(BaseAdminObject, View):
     """ Base Admin view, support some comm attrs."""
 
     base_template = 'xadmin/base.html'
+    need_site_permission = True
 
     def __init__(self, request, *args, **kwargs):
         self.request = request
@@ -251,9 +261,8 @@ class BaseAdminView(BaseAdminObject, View):
 
         # take name and docstring from class
         update_wrapper(view, cls, updated=())
-        # and possible attributes set by decorators
-        # like csrf_exempt from dispatch
-        update_wrapper(view, cls.dispatch, assigned=())
+        view.need_site_permission = cls.need_site_permission
+        
         return view
 
     def init_request(self, *args, **kwargs):
@@ -287,12 +296,14 @@ class BaseAdminView(BaseAdminObject, View):
 class CommAdminView(BaseAdminView):
 
     base_template = 'xadmin/base_site.html'
+    menu_template = 'xadmin/includes/sitemenu_default.html'
 
     site_title = None
     site_url = '#'
     globe_models_icon = {}
     default_model_icon = None
     nav_app_label = None
+    apps_label_title = {}
 
     def get_site_menu(self):
         return None
@@ -313,6 +324,8 @@ class CommAdminView(BaseAdminView):
         nav_menu = SortedDict()
 
         for model, model_admin in self.admin_site._registry.items():
+            if getattr(model_admin, 'hidden_menu', False):
+                continue
             app_label = model._meta.app_label
             if self.nav_app_label and self.nav_app_label != app_label:
                 continue
@@ -330,8 +343,23 @@ class CommAdminView(BaseAdminView):
             if app_key in nav_menu:
                 nav_menu[app_key]['menus'].append(model_dict)
             else:
+                # Find app title
+                app_title = unicode(app_label.title())
+                if app_label.lower() in self.apps_label_title:
+                    app_title = self.apps_label_title[app_label.lower()]
+                else:
+                    mods = model.__module__.split('.')
+                    if len(mods) > 1:
+                        mod = '.'.join(mods[0:-1])
+                        if mod in sys.modules:
+                            mod = sys.modules[mod]
+                            if 'verbose_name' in dir(mod):
+                                app_title = getattr(mod, 'verbose_name')
+                            elif 'app_title' in dir(mod):
+                                app_title = getattr(mod, 'app_title')
+
                 nav_menu[app_key] = {
-                    'title': unicode(app_label.title()),
+                    'title': app_title,
                     'menus': [model_dict],
                     'url':  reverse('%s:app_list' % (self.admin_site.app_name,),
                         args=[model._meta.app_label], current_app=self.admin_site.name)
@@ -389,7 +417,13 @@ class CommAdminView(BaseAdminView):
                 self.request.session.modified = True
 
         def check_selected(menu, path):
-            selected = 'url' in menu and path.startswith(menu['url']) or False
+            selected = False
+            if 'url' in menu:
+                chop_index = menu['url'].find('?')
+                if chop_index == -1:
+                    selected = path.startswith(menu['url'])
+                else:
+                    selected = path.startswith(menu['url'][:chop_index])
             if 'menus' in menu:
                 for m in menu['menus']:
                     _s = check_selected(m, path)
@@ -401,8 +435,12 @@ class CommAdminView(BaseAdminView):
         for menu in nav_menu:
             check_selected(menu, self.request.path)
 
-        context['nav_menu'] = nav_menu
-        context['site_title'] = self.site_title or _(u'Django Xadmin')
+        context.update({
+            'menu_template': self.menu_template,
+            'nav_menu': nav_menu,
+            'site_title': self.site_title or _(u'Django Xadmin'),
+            'breadcrumbs': self.get_breadcrumb()
+        })
 
         return context
 
@@ -415,14 +453,11 @@ class CommAdminView(BaseAdminView):
         return icon
 
     @filter_hook
-    def message_user(self, message, level='info'):
-        """
-        Send a message to the user. The default implementation
-        posts a message using the django.contrib.messages backend.
-        """
-        if hasattr(messages, level) and callable(getattr(messages, level)):
-            getattr(messages, level)(self.request, message)
-
+    def get_breadcrumb(self):
+        return [{
+            'url': self.get_admin_url('index'),
+            'title': _('Home')
+            }]
 
 class ModelAdminView(CommAdminView):
 
@@ -430,6 +465,7 @@ class ModelAdminView(CommAdminView):
     exclude = None
     ordering = None
     model = None
+    remove_permissions = []
 
     def __init__(self, request, *args, **kwargs):
         self.opts = self.model._meta
@@ -453,6 +489,15 @@ class ModelAdminView(CommAdminView):
         return context
 
     @filter_hook
+    def get_breadcrumb(self):
+        bcs = super(ModelAdminView, self).get_breadcrumb()
+        item = {'title': self.opts.verbose_name_plural}
+        if self.has_view_permission():
+            item['url'] = self.model_admin_url('changelist')
+        bcs.append(item)
+        return bcs
+
+    @filter_hook
     def get_object(self, object_id):
         """
         Get model object instance by object_id, used for change admin view
@@ -464,6 +509,15 @@ class ModelAdminView(CommAdminView):
             object_id = model._meta.pk.to_python(object_id)
             return queryset.get(pk=object_id)
         except (model.DoesNotExist, ValidationError):
+            return None
+
+    @filter_hook
+    def get_object_url(self, obj):
+        if self.has_change_permission(obj):
+            return self.model_admin_url("change", getattr(obj, self.opts.pk.attname))
+        elif self.has_view_permission(obj):
+            return self.model_admin_url("detail", getattr(obj, self.opts.pk.attname))
+        else:
             return None
 
     def model_admin_url(self, name, *args, **kwargs):
@@ -508,13 +562,14 @@ class ModelAdminView(CommAdminView):
         return self.model._default_manager.get_query_set()
 
     def has_view_permission(self, obj=None):
-        return self.user.has_perm('%s.view_%s' % self.model_info) or self.has_change_permission(obj)
+        return ('view' not in self.remove_permissions) and (self.user.has_perm('%s.view_%s' % self.model_info) or \
+            self.user.has_perm('%s.change_%s' % self.model_info))
 
     def has_add_permission(self):
-        return self.user.has_perm('%s.add_%s' % self.model_info)
+        return ('add' not in self.remove_permissions) and self.user.has_perm('%s.add_%s' % self.model_info)
 
     def has_change_permission(self, obj=None):
-        return self.user.has_perm('%s.change_%s' % self.model_info)
+        return ('change' not in self.remove_permissions) and self.user.has_perm('%s.change_%s' % self.model_info)
 
     def has_delete_permission(self, obj=None):
-        return self.user.has_perm('%s.delete_%s' % self.model_info)
+        return ('delete' not in self.remove_permissions) and self.user.has_perm('%s.delete_%s' % self.model_info)

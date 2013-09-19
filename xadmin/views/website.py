@@ -17,6 +17,8 @@ from django.views.decorators.cache import never_cache
 class IndexView(Dashboard):
     title = _("Main Dashboard")
     icon = "dashboard"
+    def get_page_id(self):
+        return 'home'
 
 class AppListIndexView(IndexView):
 
@@ -81,10 +83,10 @@ class LoginView(BaseAdminView):
     def post(self, request, *args, **kwargs):
         return self.get(request)
 
-
 class LogoutView(BaseAdminView):
 
     logout_template = None
+    need_site_permission = False
 
     @filter_hook
     def update_params(self, defaults):
@@ -96,6 +98,7 @@ class LogoutView(BaseAdminView):
         defaults = {
             'extra_context': context,
             'current_app': self.admin_site.name,
+            'template_name': self.logout_template or 'xadmin/views/logged_out.html',
         }
         if self.logout_template is not None:
             defaults['template_name'] = self.logout_template

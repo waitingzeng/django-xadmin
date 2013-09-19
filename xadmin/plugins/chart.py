@@ -17,7 +17,7 @@ from django.db.models import FieldDoesNotExist, Avg, Max, Min, Count, Sum
 from xadmin.sites import site
 from xadmin.views import BaseAdminPlugin, ListAdminView
 from xadmin.views.dashboard import ModelBaseWidget, widget_manager
-from xadmin.util import lookup_field, label_for_field, json
+from xadmin.util import lookup_field, label_for_field, force_unicode, json
 
 
 @widget_manager.register
@@ -146,7 +146,6 @@ class ChartsView(ListAdminView):
             datas = self.get_model_data()
         else:
             datas = getattr(self, 'get_%s_chart_data' % name)()
-
         option = {
             'series': {'lines': {'show': True}, 'points': {'show': True}},
             'grid': {'hoverable': True, 'clickable': True}}

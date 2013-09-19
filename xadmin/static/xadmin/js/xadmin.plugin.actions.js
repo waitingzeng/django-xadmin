@@ -40,7 +40,6 @@
         showClear = function() {
             $(options.acrossClears).show();
             $(options.acrossQuestions).hide();
-            $(options.actionContainer).toggleClass(options.selectedClass);
             $(options.allContainer).show();
             $(options.counterContainer).hide();
         }
@@ -53,7 +52,6 @@
         clearAcross = function() {
             reset();
             $(options.acrossInput).val(0);
-            $(options.actionContainer).removeClass(options.selectedClass);
         }
         // Show counter by default
         $(options.counterContainer).show();
@@ -69,16 +67,21 @@
             checker($(this).is(":checked"));
             updateCounter();
         });
-        $("div.actions .question").click(function(event) {
+
+        $("div.form-actions .question").click(function(event) {
             event.preventDefault();
             $(options.acrossInput).val(1);
             showClear();
         });
-        $("div.actions .clear").click(function(event) {
+        $("div.form-actions .clear").click(function(event) {
             event.preventDefault();
             $(options.allToggle).attr("checked", false);
             clearAcross();
-            checker(false);
+        });
+
+        $(actionCheckboxes).bind('checker', function(e, checked){
+            $(this).prop("checked", checked)
+                .parentsUntil('.grid-item').parent().toggleClass(options.selectedClass, checked);
             updateCounter();
         });
         lastChecked = null;
@@ -104,16 +107,17 @@
             updateCounter();
         });
         updateCounter();
-        $('.actions').removeClass('hidden');
+        if ($(options.acrossInput).val() == 1) {
+            showClear();
+        }
     }
     /* Setup plugin defaults */
     $.fn.actions.defaults = {
-        actionContainer: "div.actions",
-        counterContainer: ".action-counter",
-        allContainer: "div.actions .all",
-        acrossInput: "div.actions #select-across",
-        acrossQuestions: "div.actions .question",
-        acrossClears: "div.actions .clear",
+        counterContainer: "div.form-actions .action-counter",
+        allContainer: "div.form-actions .all",
+        acrossInput: "div.form-actions #select-across",
+        acrossQuestions: "div.form-actions .question",
+        acrossClears: "div.form-actions .clear",
         allToggle: "#action-toggle",
         selectedClass: "warning"
     }
@@ -124,6 +128,6 @@
     }
 
     $(document).ready(function($) {
-        $("tr input.action-select").actions();
+        $(".results input.action-select").actions();
     });
 })(jQuery);

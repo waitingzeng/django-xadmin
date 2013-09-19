@@ -1,5 +1,6 @@
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.core.paginator import InvalidPage, Paginator
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.http import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse, TemplateResponse
@@ -25,7 +26,7 @@ ERROR_FLAG = 'e'
 DOT = '.'
 
 # Text to display within change-list table cells if the value is blank.
-EMPTY_CHANGELIST_VALUE = _('None')
+EMPTY_CHANGELIST_VALUE = _('Null')
 
 
 class FakeMethodField(object):
@@ -100,7 +101,8 @@ class ListAdminView(ModelAdminView):
     """
     list_display = ('__str__',)
     list_display_links = ()
-    list_select_related = False
+    list_display_links_details = False
+    list_select_related = None
     list_per_page = 50
     list_max_show_all = 200
     list_exclude = ()
@@ -117,6 +119,7 @@ class ListAdminView(ModelAdminView):
             raise PermissionDenied
 
         request = self.request
+        request.session['LIST_QUERY'] = (self.model_info, self.request.META['QUERY_STRING'])
 
         self.pk_attname = self.opts.pk.attname
         self.lookup_opts = self.opts
@@ -220,7 +223,8 @@ class ListAdminView(ModelAdminView):
         if not queryset.query.select_related:
             if self.list_select_related:
                 queryset = queryset.select_related()
-            else:
+            elif self.list_select_related is None:
+                related_fields = []
                 for field_name in self.list_display:
                     try:
                         field = self.opts.get_field(field_name)
@@ -228,8 +232,11 @@ class ListAdminView(ModelAdminView):
                         pass
                     else:
                         if isinstance(field.rel, models.ManyToOneRel):
-                            queryset = queryset.select_related()
-                            break
+                            related_fields.append(field_name)
+                if related_fields:
+                    queryset = queryset.select_related(*related_fields)
+            else:
+                pass
 
         # Then, set queryset ordering.
         queryset = queryset.order_by(*self.get_ordering())
@@ -528,7 +535,7 @@ class ListAdminView(ModelAdminView):
         try:
             f, attr, value = lookup_field(field_name, obj, self)
         except (AttributeError, ObjectDoesNotExist):
-            item.text = EMPTY_CHANGELIST_VALUE
+            item.text = mark_safe("<span class='text-muted'>%s</span>" % EMPTY_CHANGELIST_VALUE)
         else:
             if f is None:
                 item.allow_tags = getattr(attr, 'allow_tags', False)
@@ -542,7 +549,7 @@ class ListAdminView(ModelAdminView):
                 if isinstance(f.rel, models.ManyToOneRel):
                     field_val = getattr(obj, f.name)
                     if field_val is None:
-                        item.text = EMPTY_CHANGELIST_VALUE
+                        item.text = mark_safe("<span class='muted'>%s</span>" % EMPTY_CHANGELIST_VALUE)
                     else:
                         item.text = field_val
                 else:
@@ -559,9 +566,17 @@ class ListAdminView(ModelAdminView):
         # If list_display_links not defined, add the link tag to the first field
         if (item.row['is_display_first'] and not self.list_display_links) \
                 or field_name in self.list_display_links:
-            url = self.url_for_result(obj)
             item.row['is_display_first'] = False
-            item.wraps.append(u'<a href="%s">%%s</a>' % url)
+            item.is_display_link = True
+            if self.list_display_links_details:
+                item_res_uri = self.model_admin_url("detail", getattr(obj, self.pk_attname))
+                if item_res_uri:
+                    edit_url = self.model_admin_url("change", getattr(obj, self.pk_attname))
+                    item.wraps.append('<a data-res-uri="%s" data-edit-uri="%s" class="details-handler" rel="tooltip" title="%s">%%s</a>'
+                                     % (item_res_uri, edit_url, _(u'Details of %s') % str(obj)))
+            else:
+                url = self.url_for_result(obj)
+                item.wraps.append(u'<a href="%s">%%s</a>' % url)
 
         return item
 
@@ -583,15 +598,16 @@ class ListAdminView(ModelAdminView):
 
     @filter_hook
     def url_for_result(self, result):
-        if self.has_change_permission(result):
-            return self.model_admin_url("change", getattr(result, self.pk_attname))
-        else:
-            return self.model_admin_url("detail", getattr(result, self.pk_attname))
+        return self.get_object_url(result)
 
     # Media
     @filter_hook
     def get_media(self):
-        return super(ListAdminView, self).get_media() + self.vendor('xadmin.page.list.js')
+        media = super(ListAdminView, self).get_media() + self.vendor('xadmin.page.list.js', 'xadmin.page.form.js')
+        if self.list_display_links_details:
+            media += self.vendor('xadmin.plugin.details.js',
+                                 'xadmin.modal.css', 'xadmin.form.css')
+        return media
 
     # Blocks
     @inclusion_tag('xadmin/includes/pagination.html')

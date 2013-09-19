@@ -49,9 +49,9 @@ def _registe_model(admin, model):
         inline_fields = []
         for inline in getattr(admin, 'inlines', []):
             inline_model = inline.model
-            if issubclass(inline, GenericInlineModelAdmin):
-                ct_field = inline.ct_field
-                ct_fk_field = inline.ct_fk_field
+            if getattr(inline, 'generic_inline', False):
+                ct_field = getattr(inline, 'ct_field', 'content_type')
+                ct_fk_field = getattr(inline, 'ct_fk_field', 'object_id')
                 for field in model._meta.many_to_many:
                     if isinstance(field, GenericRelation) and field.rel.to == inline_model and field.object_id_field_name == ct_fk_field and field.content_type_field_name == ct_field:
                         inline_fields.append(field.name)
@@ -163,15 +163,23 @@ class ReversionPlugin(BaseAdminPlugin):
     # Block Views
     def block_top_toolbar(self, context, nodes):
         recoverlist_url = self.admin_view.model_admin_url('recoverlist')
-        nodes.append(mark_safe('<a class="btn btn-small" href="%s"><i class="icon-trash"></i> %s</a>' % (recoverlist_url, _(u"Recover deleted"))))
+        nodes.append(mark_safe('<div class="btn-group"><a class="btn btn-default btn-sm" href="%s"><i class="icon-trash"></i> %s</a></div>' % (recoverlist_url, _(u"Recover"))))
 
-    def block_object_tools(self, context, nodes):
+    def block_nav_toggles(self, context, nodes):
         obj = getattr(
             self.admin_view, 'org_obj', getattr(self.admin_view, 'obj', None))
         if obj:
             revisionlist_url = self.admin_view.model_admin_url(
                 'revisionlist', quote(obj.pk))
-            nodes.append(mark_safe('<a href="%s" class="btn btn-small"><i class="icon-time"></i> %s</a>' % (revisionlist_url, _(u'History'))))
+            nodes.append(mark_safe('<a href="%s" class="navbar-toggle pull-right"><i class="icon-time"></i></a>' % revisionlist_url))
+
+    def block_nav_btns(self, context, nodes):
+        obj = getattr(
+            self.admin_view, 'org_obj', getattr(self.admin_view, 'obj', None))
+        if obj:
+            revisionlist_url = self.admin_view.model_admin_url(
+                'revisionlist', quote(obj.pk))
+            nodes.append(mark_safe('<a href="%s" class="btn btn-default"><i class="icon-time"></i> <span>%s</span></a>' % (revisionlist_url, _(u'History'))))
 
 
 class BaseReversionView(ModelAdminView):

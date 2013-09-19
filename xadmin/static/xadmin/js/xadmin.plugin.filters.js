@@ -1,37 +1,25 @@
 (function($) {
-  $('.popover.dropdown-menu input, .popover.dropdown-menu label').click(function(e){
-    e.stopPropagation();
-  });
-
+   
   $(function(){
-    $('.filters .dropdown-submenu').on('mouseover', function(e){
-      $(this).parent().find('>.dropdown-submenu.open').removeClass('open');
-      $(this).addClass('open');
-    });
-
-    $(document)
-      .on('click.filterdropdown.data-api touchstart.filterdropdown.data-api', function(e){
-        $('.filters .dropdown-submenu.open').removeClass('open');
-      })
 
     // menber filter
-    $('.filter-number .add-on.remove').click(function(e){
-      $(this).parent().find('input[type="text"]').val('');
+    $('.filter-number .remove').click(function(e){
+      $(this).parent().parent().find('input[type="number"]').val('');
     });
 
-    $('.filter-number .add-on.toggle').click(function(e){
+    $('.filter-number .toggle').click(function(e){
       var new_name = $(this).hasClass('active') ? $(this).attr('data-off-name') : $(this).attr('data-on-name');
-      $(this).parent().find('input[type="text"]').attr('name', new_name);
+      $(this).parent().parent().find('input[type="number"]').attr('name', new_name);
     });
 
     $('#filter-menu form').submit(function(){
-      $(this).find('input[type="text"]').each(function(e){
+      $(this).find('input[type="text"],input[type="number"]').each(function(e){
         if(!$(this).val()) $(this).attr('name', '');
       });
       return true;
     });
 
-    $('.menu-date-range .dropdown-menu form').each(function(){
+    $('.menu-date-range form').each(function(){
       var el = $(this);
       var start_date = el.find('.calendar.date-start').datepicker({format: $.date_local.dateJSFormat, language: 'xadmin'});
       var end_date = el.find('.calendar.date-end').datepicker({format: $.date_local.dateJSFormat, language: 'xadmin'});

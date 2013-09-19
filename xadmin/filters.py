@@ -66,7 +66,7 @@ class BaseFilter(object):
     def get_context(self):
         return {'title': self.title, 'spec': self, 'form_params': self.form_params()}
 
-    def __repr__(self):
+    def __str__(self):
         tpl = get_template(self.template)
         return mark_safe(tpl.render(Context(self.get_context())))
 
@@ -231,7 +231,8 @@ class NumberFieldListFilter(FieldFilter):
 class DateFieldListFilter(ListFieldFilter):
     template = 'xadmin/filters/date.html'
     lookup_formats = {'since': '%s__gte', 'until': '%s__lt',
-                      'year': '%s__year', 'month': '%s__month', 'day': '%s__day'}
+                      'year': '%s__year', 'month': '%s__month', 'day': '%s__day',
+                      'isnull': '%s__isnull'}
 
     @classmethod
     def test(cls, field, request, params, model, admin_view, field_path):
@@ -263,6 +264,12 @@ class DateFieldListFilter(ListFieldFilter):
 
         self.links = (
             (_('Any date'), {}),
+            (_('Has date'), {
+                self.lookup_isnull_name: False
+            }),
+            (_('Has no date'), {
+                self.lookup_isnull_name: 'True'
+            }),
             (_('Today'), {
                 self.lookup_since_name: str(today),
                 self.lookup_until_name: str(tomorrow),

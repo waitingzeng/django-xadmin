@@ -1,6 +1,5 @@
 from django import forms
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
 from django.db import router
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import loader
@@ -9,6 +8,7 @@ from django.utils.datastructures import SortedDict
 from django.utils.encoding import force_unicode
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _, ungettext
+from django.utils.text import capfirst
 from xadmin.sites import site
 from xadmin.util import model_format_dict, get_deleted_objects, model_ngettext
 from xadmin.views import BaseAdminPlugin, ListAdminView
@@ -29,6 +29,7 @@ action_checkbox.allow_tags = True
 class BaseActionView(ModelAdminView):
     action_name = None
     description = None
+    icon = 'tasks'
 
     model_perm = 'change'
 
@@ -54,6 +55,7 @@ class DeleteSelectedAction(BaseActionView):
     delete_selected_confirmation_template = None
 
     model_perm = 'delete'
+    icon = 'remove'
 
     @filter_hook
     def delete_models(self, queryset):
@@ -155,16 +157,17 @@ class ActionPlugin(BaseAdminPlugin):
     def post_response(self, response, *args, **kwargs):
         request = self.admin_view.request
         av = self.admin_view
-        # Actions with no confirmation
-        if self.actions and 'action' in request.POST and '_save' not in request.POST:
-            action = request.POST['action']
 
+        # Actions with no confirmation
+        if self.actions and 'action' in request.POST:
+            action = request.POST['action']
+            
             if action not in self.actions:
                 msg = _("Items must be selected in order to perform "
                         "actions on them. No items have been changed.")
                 av.message_user(msg)
             else:
-                ac, name, description = self.actions[action]
+                ac, name, description, icon = self.actions[action]
                 select_across = request.POST.get('select_across', False) == '1'
                 selected = request.POST.getlist(ACTION_CHECKBOX_NAME)
 
@@ -178,9 +181,7 @@ class ActionPlugin(BaseAdminPlugin):
                     if not select_across:
                         # Perform the action only on the selected objects
                         queryset = av.list_queryset.filter(pk__in=selected)
-                    action_view = self.get_model_view(ac, av.model)
-                    action_view.init_action(av)
-                    response = action_view.do_action(queryset)
+                    response = self.response_action(ac, queryset)
                     # Actions may return an HttpResponse, which will be used as the
                     # response from the POST. If not, we'll be a good little HTTP
                     # citizen and redirect back to the changelist page.
@@ -189,6 +190,14 @@ class ActionPlugin(BaseAdminPlugin):
                     else:
                         return HttpResponseRedirect(request.get_full_path())
         return response
+
+    def response_action(self, ac, queryset):
+        if isinstance(ac, type) and issubclass(ac, BaseActionView):
+            action_view = self.get_model_view(ac, self.admin_view.model)
+            action_view.init_action(self.admin_view)
+            return action_view.do_action(queryset)
+        else:
+            return ac(self.admin_view, self.request, queryset)
 
     def get_actions(self):
         if self.actions is None:
@@ -208,8 +217,8 @@ class ActionPlugin(BaseAdminPlugin):
 
         # Convert the actions into a SortedDict keyed by name.
         actions = SortedDict([
-            (name, (ac, name, desc))
-            for ac, name, desc in actions
+            (name, (ac, name, desc, icon))
+            for ac, name, desc, icon in actions
         ])
 
         return actions
@@ -220,15 +229,33 @@ class ActionPlugin(BaseAdminPlugin):
         tuple (name, description).
         """
         choices = []
-        for ac, name, description in self.actions.itervalues():
-            choice = (name, description % model_format_dict(self.opts))
+        for ac, name, description, icon in self.actions.itervalues():
+            choice = (name, description % model_format_dict(self.opts), icon)
             choices.append(choice)
         return choices
 
     def get_action(self, action):
-        if not issubclass(action, BaseActionView) or not action.has_perm(self.admin_view):
+        if isinstance(action, type) and issubclass(action, BaseActionView):
+            if not action.has_perm(self.admin_view):
+                return None
+            return action, getattr(action, 'action_name'), getattr(action, 'description'), getattr(action, 'icon')
+
+        elif callable(action):
+            func = action
+            action = action.__name__
+
+        elif hasattr(self.admin_view.__class__, action):
+            func = getattr(self.admin_view.__class__, action)
+
+        else:
             return None
-        return action, getattr(action, 'action_name'), getattr(action, 'description')
+
+        if hasattr(func, 'short_description'):
+            description = func.short_description
+        else:
+            description = capfirst(action.replace('_', ' '))
+
+        return func, action, description, getattr(func, 'icon', 'tasks')
 
     # View Methods
     def result_header(self, item, field_name, row):
