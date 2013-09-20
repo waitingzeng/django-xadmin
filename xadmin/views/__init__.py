@@ -6,14 +6,14 @@ from edit import CreateAdminView, UpdateAdminView, ModelFormAdminView
 from delete import DeleteAdminView
 from detail import DetailAdminView
 from dashboard import Dashboard, BaseWidget, widget_manager, ModelDashboard
-from website import IndexView, LoginView, LogoutView, UserSettingView
+from website import IndexView, LoginView, LogoutView, UserSettingView, AppListIndexView
 
 __all__ = (
     'BaseAdminObject',
     'BaseAdminPlugin', 'BaseAdminView', 'CommAdminView', 'ModelAdminView', 'ListAdminView',
     'ModelFormAdminView', 'CreateAdminView', 'UpdateAdminView', 'DeleteAdminView', 'DetailAdminView',
     'Dashboard', 'BaseWidget',
-    'IndexView', 'LoginView', 'LogoutView'
+    'IndexView', 'LoginView', 'LogoutView', 'AppListIndexView',
 )
 
 # admin site-wide views
@@ -35,4 +35,5 @@ def register_builtin_views(site):
     site.register_modelview(
         r'^(.+)/dashboard/$', ModelDashboard, name='%s_%s_dashboard')
 
+    site.register_view(r'^(?P<app_label>\w+)$', AppListIndexView, name='app_list')
     site.set_loginview(LoginView)

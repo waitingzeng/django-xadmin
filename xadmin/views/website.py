@@ -25,13 +25,15 @@ class AppListIndexView(IndexView):
     def get(self, request, app_label):
         self.app_label = app_label
         self.title = _("%s Dashboard" % app_label)
-        return super(IndexView, self).get(request)
+        return super(AppListIndexView, self).get(request)
 
     def post(self, request, app_label):
         self.app_label = app_label
         self.title = _("%s Dashboard" % app_label)
-        return super(IndexView, self).post(request)
+        return super(AppListIndexView, self).post(request)
     
+    def get_page_id(self):
+        return 'home'
 
 class UserSettingView(BaseAdminView):
 

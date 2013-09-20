@@ -1,7 +1,9 @@
+import json
+import django
 from django.db import models
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.base import ModelBase
@@ -10,11 +12,13 @@ from django.utils.encoding import smart_unicode
 from django.db.models.signals import post_syncdb
 from django.contrib.auth.models import Permission
 
-from xadmin.util import json
-
 import datetime
 import decimal
 
+if django.VERSION[1] > 4:
+    AUTH_USER_MODEL = django.contrib.auth.get_user_model()
+else:
+    AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 def add_view_permissions(sender, **kwargs):
     """

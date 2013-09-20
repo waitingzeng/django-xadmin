@@ -50,7 +50,6 @@ class ReadOnlyField(Field):
     def render(self, form, form_style, context):
         html = ''
         for field in self.fields:
-            print self.detail
             result = self.detail.get_field_result(field)
             field = {'auto_id': field}
             html += loader.render_to_string(
@@ -73,6 +72,8 @@ class ModelFormAdminView(ModelAdminView):
     change_form_template = None
 
     form_layout = None
+
+    extend_layout = True
 
     def __init__(self, request, *args, **kwargs):
         overrides = FORMFIELD_FOR_DBFIELD_DEFAULTS.copy()
@@ -194,7 +195,7 @@ class ModelFormAdminView(ModelAdminView):
             container = layout[0].fields
             other_fieldset = Fieldset(_(u'Other Fields'), *[f for f in fields if f not in rendered_fields])
 
-            if len(other_fieldset.fields):
+            if self.extend_layout and len(other_fieldset.fields):
                 if len(container) and isinstance(container[0], Column):
                     container[0].fields.append(other_fieldset)
                 else:

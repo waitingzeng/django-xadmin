@@ -129,6 +129,8 @@ class InlineModelAdmin(ModelFormAdminView):
     admin_view = None
     style = 'stacked'
 
+    extend_layout = True
+
     def init(self, admin_view):
         self.admin_view = admin_view
         self.parent_model = admin_view.model
@@ -199,9 +201,9 @@ class InlineModelAdmin(ModelFormAdminView):
                 layout = Layout(*layout)
 
                 rendered_fields = [i[1] for i in layout.get_field_names()]
-                layout.extend([f for f in instance[0]
-                              .fields.keys() if f not in rendered_fields])
-
+                if self.extend_layout:
+                    layout.extend([f for f in instance[0]
+                                  .fields.keys() if f not in rendered_fields])
             helper.add_layout(layout)
             style.update_layout(helper)
 

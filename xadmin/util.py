@@ -2,6 +2,7 @@
 import datetime
 import decimal
 
+import django
 from django.db import models
 from django.db.models.sql.query import LOOKUP_SEP
 from django.db.models.deletion import Collector
@@ -33,6 +34,13 @@ try:
 except ImportError:
     from django.utils.timezone import localtime as tz_localtime
 
+try:
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    username_field = User.USERNAME_FIELD
+except Exception:
+    from django.contrib.auth.models import User
+    username_field = 'username'
 
 def xstatic(*tags):
     from vendors import vendors
@@ -531,3 +539,17 @@ def get_limit_choices_to_from_path(model, path):
         return limit_choices_to  # already a Q
     else:
         return models.Q(**limit_choices_to)  # convert dict to Q
+
+def sortkeypicker(keynames):
+    negate = set()
+    for i, k in enumerate(keynames):
+        if k[:1] == '-':
+            keynames[i] = k[1:]
+            negate.add(k[1:])
+    def getit(adict):
+        composite = [adict[k] for k in keynames]
+        for i, (k, v) in enumerate(zip(keynames, composite)):
+            if k in negate:
+                composite[i] = -v
+        return composite
+    return getit

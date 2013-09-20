@@ -11,7 +11,13 @@
     this.from_box = el.find('.selector-available select');
     this.to_box = el.find('.selector-chosen select');
 
-    this.form = this.el.parents('form');
+    var findForm = function(node) {
+        if (node.tagName.toLowerCase() != 'form') {
+            return findForm(node.parentNode);
+        }
+        return node;
+    }
+    this.form = $(findForm(element));
 
     // link
     this.btn_add_all = el.find(".btn.selector-chooseall");
@@ -65,7 +71,6 @@
               select.options[select.options.length] = new Option(node.text, node.value, false, false);
           }
       }
-      //this.select_all();
     },
     filter: function(text) {
       // Redisplay the HTML select box, displaying only the choices containing ALL

@@ -325,9 +325,9 @@ class AdminSite(object):
                                     include(patterns('', *view_urls)))
                                     )
 
-        from xadmin.views.website import AppListIndexView
-        urlpatterns += patterns('',
-                        url('^(?P<app_label>\w+)$', wrap(self.create_admin_view(AppListIndexView)), name='app_list'))
+        #from xadmin.views.website import AppListIndexView
+        #urlpatterns += patterns('',
+        #                url('^(?P<app_label>\w+)$', wrap(self.create_admin_view(AppListIndexView)), name='app_list'))
 
         return urlpatterns
 
