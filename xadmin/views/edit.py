@@ -43,8 +43,8 @@ FORMFIELD_FOR_DBFIELD_DEFAULTS = {
 class ReadOnlyField(Field):
     template = "xadmin/layout/field_value.html"
 
-    def __init__(self, detail, *args, **kwargs):
-        super(ReadOnlyField, self).__init__(*args, **kwargs)
+    def __init__(self, field, detail, *args, **kwargs):
+        super(ReadOnlyField, self).__init__(field, *args, **kwargs)
         self.detail = detail
 
     def render(self, form, form_style, context):
@@ -215,6 +215,7 @@ class ModelFormAdminView(ModelAdminView):
             detail = self.get_model_view(
                 DetailAdminUtil, self.model, self.form_obj.instance)
             for field in readonly_fields:
+                print helper[field]
                 helper[field].wrap(ReadOnlyField, detail)
 
         return helper
