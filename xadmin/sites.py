@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.utils.translation import ugettext as _
+from collections import OrderedDict
 
 
 reload(sys)
@@ -34,16 +35,16 @@ class AdminSite(object):
         self.name = name
         self.app_name = app_name
 
-        self._registry = {}  # model_class class -> admin_class class
-        self._registry_avs = {}  # admin_view_class class -> admin_class class
-        self._registry_settings = {}  # settings name -> admin_class class
+        self._registry = OrderedDict()  # model_class class -> admin_class class
+        self._registry_avs = OrderedDict()  # admin_view_class class -> admin_class class
+        self._registry_settings = OrderedDict()  # settings name -> admin_class class
         self._registry_views = []
             # url instance contains (path, admin_view class, name)
         self._registry_modelviews = []
             # url instance contains (path, admin_view class, name)
-        self._registry_plugins = {}  # view_class class -> plugin_class class
+        self._registry_plugins = OrderedDict()  # view_class class -> plugin_class class
 
-        self._admin_view_cache = {}
+        self._admin_view_cache = OrderedDict()
 
         self.check_dependencies()
 
