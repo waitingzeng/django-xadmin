@@ -33,6 +33,14 @@ class GroupAdmin(object):
     model_icon = 'group'
 
 
+User._meta.get_field('username').validators = []
+
+class NewUserCreationForm(UserCreationForm):
+    username = forms.CharField(label=_("Username"), max_length=30)
+
+class NewUserChangeForm(UserChangeForm):
+    username = forms.CharField(label=_("Username"), max_length=30)
+
 class UserAdmin(object):
     change_user_password_template = None
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'show_permissions')
@@ -54,9 +62,9 @@ class UserAdmin(object):
 
     def get_model_form(self, **kwargs):
         if self.org_obj is None:
-            self.form = UserCreationForm
+            self.form = NewUserCreationForm
         else:
-            self.form = UserChangeForm
+            self.form = NewUserChangeForm
         return super(UserAdmin, self).get_model_form(**kwargs)
 
     def get_form_layout(self):
