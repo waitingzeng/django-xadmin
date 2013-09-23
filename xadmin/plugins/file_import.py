@@ -127,15 +127,12 @@ class ImportPlugin(BaseAdminPlugin):
 
         names_to_fields = {unicode(field.verbose_name): field for field in fields}
         for i, row in enumerate(dataset.dict):
-
             new_row = {}
-            for k, v in row.items():
-                field = names_to_fields[k]
-                new_row.update(self.get_field_data(field, v))
-
-            obj = self.model(**new_row)
             try:
-                obj.pk = None
+                for k, v in row.items():
+                    field = names_to_fields[k]
+                    new_row.update(self.get_field_data(field, v))
+                obj = self.model(**new_row)
                 obj.save()
             except Exception, e:
                 logging.error('import data fail %s', new_row, exc_info=True)
@@ -177,9 +174,9 @@ class ImportPlugin(BaseAdminPlugin):
                     data = unicode(data, self.from_encoding).encode('utf-8')
                 dataset = input_format.create_dataset(data)
                 result = self.import_data(dataset, dry_run=False,
-                                              raise_errors=True)
+                                              raise_errors=False)
 
-                return None
+                return HttpResponseRedirect('.')
         else:
             for k, v in form.errors.items():
                 logging.error('%s: %s', k, v)
