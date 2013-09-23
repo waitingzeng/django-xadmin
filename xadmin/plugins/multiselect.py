@@ -11,6 +11,10 @@ from django.utils.html import escape, conditional_escape
 from django.utils.safestring import mark_safe
 from xadmin.util import vendor
 from xadmin.views import BaseAdminPlugin, ModelFormAdminView
+from django.utils.safestring import mark_safe
+from django.utils.html import conditional_escape, format_html, format_html_join
+from django.utils.encoding import force_text, python_2_unicode_compatible
+
 
 
 class SelectMultipleTransfer(forms.SelectMultiple):
@@ -87,13 +91,45 @@ class SelectMultipleDropdown(forms.SelectMultiple):
         return super(SelectMultipleDropdown, self).render(name, value, attrs, choices)
 
 
+class SelectMultipleCheckbox(forms.CheckboxSelectMultiple):
+
+    def render(self, name, value, attrs=None, choices=()):
+        
+        if value is None: value = []
+        has_id = attrs and 'id' in attrs
+        final_attrs = self.build_attrs(attrs, name=name)
+        output = ['<ul class="list-inline">']
+        # Normalize to strings
+        str_values = set([force_text(v) for v in value])
+        for i, (option_value, option_label) in enumerate(chain(self.choices, choices)):
+            # If an ID attribute was given, add a numeric index as a suffix,
+            # so that the checkboxes don't all have the same ID attribute.
+            if has_id:
+                final_attrs = dict(final_attrs, id='%s_%s' % (attrs['id'], i))
+                label_for = format_html(' for="{0}"', final_attrs['id'])
+            else:
+                label_for = ''
+
+            cb = forms.CheckboxInput(final_attrs, check_test=lambda value: value in str_values)
+            option_value = force_text(option_value)
+            rendered_cb = cb.render(name, option_value)
+            option_label = force_text(option_label)
+            output.append(format_html('<li><label{0}>{1} {2}</label></li>',
+                                      label_for, rendered_cb, option_label))
+        output.append('</ul>')
+        return mark_safe('\n'.join(output))
+        
+
+
+
 class M2MSelectPlugin(BaseAdminPlugin):
 
     def init_request(self, *args, **kwargs):
         return hasattr(self.admin_view, 'style_fields') and \
             (
                 'm2m_transfer' in self.admin_view.style_fields.values() or
-                'm2m_dropdown' in self.admin_view.style_fields.values()
+                'm2m_dropdown' in self.admin_view.style_fields.values() or
+                'm2m_checkbox' in self.admin_view.style_fields.values()
             )
 
     def get_field_style(self, attrs, db_field, style, **kwargs):
@@ -101,6 +137,8 @@ class M2MSelectPlugin(BaseAdminPlugin):
             return {'widget': SelectMultipleTransfer(db_field.verbose_name, False), 'help_text': ''}
         if style == 'm2m_dropdown' and isinstance(db_field, ManyToManyField):
             return {'widget': SelectMultipleDropdown, 'help_text': ''}
+        if style == 'm2m_checkbox' and isinstance(db_field, ManyToManyField):
+            return {'widget': SelectMultipleCheckbox, 'help_text': ''}
         return attrs
 
 

@@ -1,0 +1,20 @@
+<table class="table table-bordered table-striped table-hover">
+    <thead>
+      <tr>{% for item in headers %}
+        <th>
+            {{ item }}
+        </th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in objects %}
+      <tr class="grid-item">
+        {% for o in row %}
+        <td>
+          {{ o }}
+        </td>
+      {% endfor %}</tr>     
+    {% endfor %}
+    </tbody>
+  </table>
+  

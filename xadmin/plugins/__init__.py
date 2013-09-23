@@ -1,6 +1,6 @@
 
 PLUGINS = ('actions', 'filters', 'bookmark', 'export', 'layout', 'refresh', 'sortable', 'details', 
-    'editable', 'relate', 'chart', 'ajax', 'relfield', 'inline', 'topnav', 'portal', 'quickform', 
+    'editable', 'relate', 'chart', 'popup', 'ajax', 'relfield', 'inline', 'topnav', 'portal', 'quickform', 
     'wizard', 'images', 'auth', 'multiselect', 'themes', 'aggregation', 'mobile', 'passwords', 
     'sitemenu', 'language', 'comments', 'meta', 'batch_create', 'file_import')
 
