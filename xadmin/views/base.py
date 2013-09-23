@@ -303,6 +303,7 @@ class CommAdminView(BaseAdminView):
     globe_models_icon = {}
     default_model_icon = None
     nav_app_label = None
+    show_app_dashboard = True
     apps_label_title = {}
 
     def get_site_menu(self):
@@ -364,6 +365,8 @@ class CommAdminView(BaseAdminView):
                     'url':  reverse('%s:app_list' % (self.admin_site.app_name,),
                         args=[model._meta.app_label], current_app=self.admin_site.name)
                 }
+                if not self.show_app_dashboard:
+                    del nav_menu[app_key]['url']
 
             app_menu = nav_menu[app_key]
             if ('first_icon' not in app_menu or
@@ -428,7 +431,7 @@ class CommAdminView(BaseAdminView):
                 for m in menu['menus']:
                     _s = check_selected(m, path)
                     if _s:
-                        selected = False
+                        selected = True
             if selected:
                 menu['selected'] = True
             return selected
