@@ -110,7 +110,12 @@ class ImportPlugin(BaseAdminPlugin):
                 all_data = {unicode(x): x for x in field.rel.to.objects.all()}
                 field.all_data = all_data
             value = field.all_data[value]
-        
+        if field.choices:
+            if not hasattr(field, 'all_data'):
+                all_data = {unicode(v): k for k, v in field.choices}
+                field.all_data = all_data
+            value = field.all_data[value]
+
         return {field.name: value}
 
     def import_data(self, dataset, dry_run=False, raise_errors=False,
@@ -126,6 +131,8 @@ class ImportPlugin(BaseAdminPlugin):
         fields = [self.model._meta.get_field(x) for x in self.import_fields]
 
         names_to_fields = {unicode(field.verbose_name): field for field in fields}
+        success = 0
+        fail = 0
         for i, row in enumerate(dataset.dict):
             new_row = {}
             try:
@@ -134,10 +141,14 @@ class ImportPlugin(BaseAdminPlugin):
                     new_row.update(self.get_field_data(field, v))
                 obj = self.model(**new_row)
                 obj.save()
+                success += 1
             except Exception, e:
                 logging.error('import data fail %s', new_row, exc_info=True)
                 if raise_errors:
                     raise e
+                fail += 1
+
+        return success, fail
 
     def import_action(self):
         '''
@@ -173,9 +184,10 @@ class ImportPlugin(BaseAdminPlugin):
                 if not input_format.is_binary() and self.from_encoding:
                     data = unicode(data, self.from_encoding).encode('utf-8')
                 dataset = input_format.create_dataset(data)
-                result = self.import_data(dataset, dry_run=False,
+                success, fail = result = self.import_data(dataset, dry_run=False,
                                               raise_errors=False)
 
+                self.admin_view.message_user('Import success %s, fail %s' % (success, fail))
                 return HttpResponseRedirect('.')
         else:
             for k, v in form.errors.items():

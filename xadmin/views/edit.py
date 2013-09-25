@@ -263,7 +263,6 @@ class ModelFormAdminView(ModelAdminView):
                 return HttpResponseRedirect(response)
             else:
                 return response
-
         return self.get_response()
 
     @filter_hook
