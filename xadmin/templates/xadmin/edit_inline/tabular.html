@@ -38,6 +38,9 @@
 {% block formset_empty %}
   <tr class="formset-row">
     {% crispy formset.formset.empty_form formset.formset.helper %}
+    {% for field in readonly_fields %}
+    <td></td>
+    {% endfor %}
     {% if formset.formset.can_delete %}
       <td><a class="delete-row"><i class="icon icon-remove"></i></a></td>
     {% endif %}

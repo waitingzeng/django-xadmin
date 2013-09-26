@@ -425,7 +425,7 @@ def display_for_field(value, field):
     elif isinstance(field, models.DecimalField):
         return formats.number_format(value, field.decimal_places)
     elif isinstance(field, models.FloatField):
-        return formats.number_format(value)
+        return formats.number_format(value, 2)
     elif isinstance(field.rel, models.ManyToManyRel):
         return ', '.join([smart_unicode(obj) for obj in value.all()])
     else:

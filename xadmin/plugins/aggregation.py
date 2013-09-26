@@ -18,6 +18,7 @@ AGGREGATE_TITLE = {
 class AggregationPlugin(BaseAdminPlugin):
 
     aggregate_fields = {}
+    aggregate_all = False
 
     def init_request(self, *args, **kwargs):
         return bool(self.aggregate_fields)
@@ -44,10 +45,12 @@ class AggregationPlugin(BaseAdminPlugin):
         return item
 
     def _get_aggregate_row(self):
-        queryset = self.admin_view.list_queryset._clone()
+        if self.aggregate_all:
+            queryset = self.admin_view.list_queryset._clone()
+        else:
+            queryset = self.admin_view.result_list._clone()
         obj = queryset.aggregate(*[AGGREGATE_METHODS[method](field_name) for field_name, method in
                                    self.aggregate_fields.items() if method in AGGREGATE_METHODS])
-
         row = ResultRow()
         row['is_display_first'] = False
         row.cells = [self._get_field_aggregate(field_name, obj, row) for field_name in self.admin_view.list_display]
