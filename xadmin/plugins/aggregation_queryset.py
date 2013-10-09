@@ -18,7 +18,7 @@ class AggregationQuerySetPlugin(BaseAdminPlugin):
     aggregate_queryset_all = False
 
     def init_request(self, *args, **kwargs):
-        return bool(self.aggregate_queryset_fields)
+        return bool(self.aggregate_queryset_fields) and not bool(self.request.REQUEST.get('_popup'))
 
     def _get_field_aggregate(self, field_name, queryset, row):
         item = ResultItem(field_name, row)
