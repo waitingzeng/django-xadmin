@@ -310,6 +310,10 @@ class ImportPlugin(BaseAdminPlugin):
                     raise e
                 fail += 1
 
+        for field in fields:
+            if hasattr(field, 'all_data'):
+                delattr(field, 'all_data')
+
         return success, fail
 
     def import_action(self):
