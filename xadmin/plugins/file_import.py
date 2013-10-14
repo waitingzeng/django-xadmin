@@ -237,6 +237,8 @@ class ImportPlugin(BaseAdminPlugin):
         if not self.import_fields:
             self.import_fields = [x.name for x in self.model._meta.fields]
 
+        self.fields_data = {}
+        self.import_errors = {}
 
     def block_top_toolbar(self, context, nodes):
         if self.list_import:
@@ -268,15 +270,15 @@ class ImportPlugin(BaseAdminPlugin):
 
     def get_field_data(self, field, value):
         if isinstance(field, models.ForeignKey):
-            if not hasattr(field, 'all_data'):
+            if field.name not in self.fields_data:
                 all_data = {unicode(x): x for x in field.rel.to.objects.all()}
-                field.all_data = all_data
-            value = field.all_data[value]
+                self.fields_data[field.name] = all_data
+            value = self.fields_data[field.name][value]
         if field.choices:
-            if not hasattr(field, 'all_data'):
+            if field.name not in self.fields_data:
                 all_data = {unicode(v): k for k, v in field.choices}
-                field.all_data = all_data
-            value = field.all_data[value]
+                self.fields_data[field.name] = all_data
+            value = self.fields_data[field.name][value]
 
         return {field.name: value}
 
@@ -300,7 +302,13 @@ class ImportPlugin(BaseAdminPlugin):
             try:
                 for k, v in row.items():
                     field = names_to_fields[k]
-                    new_row.update(self.get_field_data(field, v))
+                    try:
+                        new_row.update(self.get_field_data(field, v))
+                    except KeyError, e:
+                        msg = "`%s` : `%s` not found" % (field.verbose_name, v)
+                        self.import_errors[msg] = True
+                        logging.error(msg, exc_info=True)
+                        raise e
                 obj = self.model(**new_row)
                 obj.save()
                 success += 1
@@ -309,10 +317,6 @@ class ImportPlugin(BaseAdminPlugin):
                 if raise_errors:
                     raise e
                 fail += 1
-
-        for field in fields:
-            if hasattr(field, 'all_data'):
-                delattr(field, 'all_data')
 
         return success, fail
 
@@ -353,7 +357,11 @@ class ImportPlugin(BaseAdminPlugin):
                 success, fail = result = self.import_data(dataset, dry_run=False,
                                               raise_errors=False)
 
+
                 self.admin_view.message_user('Import success %s, fail %s' % (success, fail))
+                for msg in self.import_errors.keys():
+                    self.admin_view.message_user(msg)
+
                 return HttpResponseRedirect('.')
         else:
             for k, v in form.errors.items():
