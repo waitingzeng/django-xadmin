@@ -303,6 +303,10 @@ class ImportPlugin(BaseAdminPlugin):
                 for k, v in row.items():
                     field = names_to_fields[k]
                     try:
+                        v = v.strip()
+                    except:
+                        pass
+                    try:
                         new_row.update(self.get_field_data(field, v))
                     except KeyError, e:
                         msg = "`%s` : `%s` not found" % (field.verbose_name, v)
