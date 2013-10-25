@@ -20,6 +20,7 @@ setup(
         'xlwt',
         'django-crispy-forms>=1.2.3',
         'django-reversion',
+        'django-import-export',
     ],
     extras_require={
         'Excel': ['xlwt'],
