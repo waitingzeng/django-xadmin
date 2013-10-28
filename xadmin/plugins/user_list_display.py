@@ -15,7 +15,7 @@ class UserListDisplayPlugin(BaseAdminPlugin):
             if create:
                 self.user_list_display = None
             else:
-                self.user_list_display = self._obj.value.split('.')
+                self.user_list_display = [x for x in self._obj.value.split('.') if x.strip()]
         except:
             self.user_list_display = None
 
