@@ -15,15 +15,20 @@ class UserListDisplayPlugin(BaseAdminPlugin):
             if create:
                 self.user_list_display = None
             else:
-                self.user_list_display = [x for x in self._obj.value.split('.') if x.strip() and x != 'action_checkbox' ]
+                self.user_list_display = self.filter_list_display(obj.value)
         except:
             self.user_list_display = None
+        return True
+
+    def filter_list_display(self, value):
+        return [x for x in value.split('.') if x.strip() and x != 'action_checkbox' ]
 
     def _get_list_display(self, __):
         if COL_LIST_VAR in self.request.GET:
             self._obj.value = self.request.GET[COL_LIST_VAR]
             self._obj.save()
-            return self._obj.value.split('.')
+
+            return self.filter_list_display(self._obj.value)
 
         if self.user_list_display:
             return self.user_list_display
