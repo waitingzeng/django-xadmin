@@ -8,6 +8,8 @@ from xadmin.views.list import COL_LIST_VAR
 class UserListDisplayPlugin(BaseAdminPlugin):
 
     def init_request(self, *args, **kwargs):
+        if self.request.GET.get('_popup'):
+            return False
         opts = self.model._meta
         self.settings_key = "userlistdisplay:%s_%s" % (opts.app_label, opts.module_name)
         try:
