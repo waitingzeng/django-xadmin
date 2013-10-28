@@ -15,7 +15,7 @@ class UserListDisplayPlugin(BaseAdminPlugin):
             if create:
                 self.user_list_display = None
             else:
-                self.user_list_display = [x for x in self._obj.value.split('.') if x.strip()]
+                self.user_list_display = [x for x in self._obj.value.split('.') if x.strip() and x != 'action_checkbox' ]
         except:
             self.user_list_display = None
 
