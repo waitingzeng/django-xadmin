@@ -17,13 +17,13 @@ class UserListDisplayPlugin(BaseAdminPlugin):
             if create:
                 self.user_list_display = None
             else:
-                self.user_list_display = self.filter_list_display(obj.value)
+                self.user_list_display = self.filter_list_display(self._obj.value)
         except:
             self.user_list_display = None
         return True
 
     def filter_list_display(self, value):
-        return [x for x in value.split('.') if x.strip() and x != 'action_checkbox' ]
+        return [x for x in value.split('.') if x.strip() and x != 'action_checkbox' and x != 'related_link' ]
 
     def _get_list_display(self, __):
         if COL_LIST_VAR in self.request.GET:
