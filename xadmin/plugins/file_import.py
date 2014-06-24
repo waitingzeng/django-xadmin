@@ -20,6 +20,7 @@ from import_export.resources import modelresource_factory
 
 import warnings
 import tablib
+from django.utils import simplejson as json
 
 try:
     from tablib.compat import xlrd
@@ -238,7 +239,7 @@ class ImportPlugin(BaseAdminPlugin):
             self.import_fields = [x.name for x in self.model._meta.fields]
 
         self.fields_data = {}
-        self.import_errors = {}
+        self.import_errors = []
 
     def block_top_toolbar(self, context, nodes):
         if self.list_import:
@@ -310,7 +311,7 @@ class ImportPlugin(BaseAdminPlugin):
                         new_row.update(self.get_field_data(field, v))
                     except KeyError, e:
                         msg = "`%s` : `%s` not found" % (field.verbose_name, v)
-                        self.import_errors[msg] = True
+                        self.import_errors.append([new_row, msg])
                         logging.error(msg, exc_info=True)
                         raise e
                 obj = self.model(**new_row)
@@ -320,6 +321,7 @@ class ImportPlugin(BaseAdminPlugin):
                 logging.error('import data fail %s', new_row, exc_info=True)
                 if raise_errors:
                     raise e
+                self.import_errors.append([new_row, e.message])
                 fail += 1
 
         return success, fail
@@ -361,10 +363,9 @@ class ImportPlugin(BaseAdminPlugin):
                 success, fail = result = self.import_data(dataset, dry_run=False,
                                               raise_errors=False)
 
-
                 self.admin_view.message_user('Import success %s, fail %s' % (success, fail))
-                for msg in self.import_errors.keys():
-                    self.admin_view.message_user(msg)
+                for row, msg in self.import_errors:
+                    self.admin_view.message_user('msg: %s, row: %s' % (str(msg), str(row)))
 
                 return HttpResponseRedirect('.')
         else:
